@@ -132,7 +132,7 @@ try:
         #move the cursor back to top
         print("\033[H", end="")
 
-        #draw bards
+        #draw bars
         for row in range(MAX_HEIGHT,0,-1):
             for height in reversed(heights):
                 if height >= row:
