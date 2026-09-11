@@ -137,7 +137,7 @@ try:
                     line += "   "
             
 
-            lines.append(line)
+            ligit snes.append(line)
         lines.append("───" * NUM_BANDS * 2)
 
         frame = "\n".join(lines)
