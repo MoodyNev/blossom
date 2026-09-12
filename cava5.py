@@ -78,11 +78,19 @@ try:
             high = band_edges[i + 1]
 
             mask = ((frequencies >= low) & (frequencies < high))
-            band_magnitude = np.max(magnitudes[mask])
-
+            band_values = magnitudes[mask]
+            if len(band_values) > 0:
+                band_magnitude = np.sqrt(np.mean(band_values ** 2))
+            else:
+                band_magnitude = 0.0
             band_magnitudes.append(band_magnitude)
 
         band_magnitudes = np.array(band_magnitudes)
+
+        band_magnitudes = np.sqrt(band_magnitudes)
+
+        POWER = 1 #here is a variable you can play with but id rather not
+        band_magnitudes = band_magnitudes ** POWER
 
         #kind of looks similar to geompace, but instead of potentials we evenly divide the spaces between values
         weights = np.linspace(0.5,2.0,NUM_BANDS)
@@ -137,7 +145,7 @@ try:
                     line += "   "
             
 
-            ligit snes.append(line)
+            lines.append(line)
         lines.append("───" * NUM_BANDS * 2)
 
         frame = "\n".join(lines)
