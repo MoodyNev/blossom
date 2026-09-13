@@ -19,12 +19,6 @@ BYTES_PER_SAMPLE= 2
 
 DEVICE = "bluez_output.88_8E_68_E1_9E_A8.1.monitor"
 
-
-
-
-
-
-
 #smoothing constants
 smoothed = np.zeros(NUM_BANDS)
 
