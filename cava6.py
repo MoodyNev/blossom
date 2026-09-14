@@ -4,6 +4,12 @@ import sounddevice as sd
 import sys
 import subprocess
 
+import time
+fps = 0.0
+fps_frames = 0
+fps_timer = time.perf_counter()
+loop_start = time.perf_counter()
+
 #smoothing stuff simply put
 #how much audio the fft looks at
 FFT_SIZE = 2048
@@ -21,7 +27,6 @@ DEVICE = "bluez_output.88_8E_68_E1_9E_A8.1.monitor"
 
 #smoothing constants
 smoothed = np.zeros(NUM_BANDS)
-
 ATTACK = 0.75
 RELEASE = 0.15
 peak_level = 0.01
@@ -140,8 +145,10 @@ try:
         #move the cursor back to top
         print("\033[H", end="")
 
-        lines = []
+        
 
+        #mirrored output :3
+        lines = []
         for row in range(MAX_HEIGHT, 0, -1):
             line = ""
             for height in heights:
@@ -157,14 +164,20 @@ try:
             
 
             lines.append(line)
+        fps_frames += 1
+        now = time.perf_counter()
+        
+        if now - fps_timer >= 1.0:
+            fps = fps_frames / (now - fps_timer)
+            fps_frames = 0
+            fps_timer = now
+        lines.append(f"FPS: {fps:.1f}")
         lines.append("── " * NUM_BANDS * 2)
 
         frame = "\n".join(lines)
 
         sys.stdout.write("\033[H" + frame + "\033[J")
         sys.stdout.flush()
-
-
 
 finally:
     #calling cursor back
