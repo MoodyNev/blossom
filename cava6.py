@@ -10,7 +10,7 @@ fps_frames = 0
 fps_timer = time.perf_counter()
 loop_start = time.perf_counter()
 
-#smoothing stuff simply put
+#smoothing stuff simply put e
 #how much audio the fft looks at
 FFT_SIZE = 2048
 #how much new audio arrives each update (step size or such)
