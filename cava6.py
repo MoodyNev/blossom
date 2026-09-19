@@ -34,7 +34,7 @@ PEAK_ATTACK = 0.8
 PEAK_RELEASE = 0.005
 
 #audio import
-#audio = wave.open("shelter2.wav","rb") eegit
+#audio = wave.open("shelter2.wav","rb") ee
 #SAMPLE_RATE = audio.getframerate()
 #CHANNELS = audio.getnchannels()
 
