@@ -8,13 +8,21 @@ import time
 fps = 0.0
 fps_frames = 0
 fps_timer = time.perf_counter()
-loop_start = time.perf_counter()
+
+#DEBUG
+read_ms = 5.0
+analysis_ms = 0.0
+render_ms = 0.0
+total_ms = 0.0
+maxr = 0 
+minr = 0
+read_times = []
 
 #smoothing stuff simply put e
 #how much audio the fft looks at
 FFT_SIZE = 2048
 #how much new audio arrives each update (step size or such)
-HOP_SIZE = 768
+HOP_SIZE = 960 #768
 
 SAMPLE_RATE = 48000
 #CHUNK_SIZE = 2048
@@ -70,7 +78,17 @@ analysis_buffer = np.mean(samples.astype(np.float32),axis=1) / 32768.0
 
 try:
     while True:
+        loop_start = time.perf_counter()
+
+        #DEBUG
+        t0 = time.perf_counter()
+
         raw_data = stream.stdout.read(HOP_SIZE * CHANNELS * BYTES_PER_SAMPLE)
+
+        #DEBUG
+        t1 = time.perf_counter()
+
+        read_times.append((t1 - t0) * 1000)
 
         #if there are no more chunks left then the song ended
         if len(raw_data) == 0:
@@ -136,6 +154,9 @@ try:
 
         smoothed += coefficients * (normalized - smoothed)
 
+        #DEBUG
+        t2 = time.perf_counter()
+
         heights = []
         for value in smoothed:
             height = int(value *MAX_HEIGHT)
@@ -143,7 +164,7 @@ try:
             heights.append(height)
 
         #move the cursor back to top
-        print("\033[H", end="")
+        #print("\033[H", end="")
 
         
 
@@ -171,13 +192,47 @@ try:
             fps = fps_frames / (now - fps_timer)
             fps_frames = 0
             fps_timer = now
-        lines.append(f"FPS: {fps:.1f}")
+        #DEBUG
+        lines.append(
+            f"FPS {fps:5.1f} | "
+            f"read {read_ms:5.1f} ms | "
+            f"analysis {analysis_ms:5.1f} ms | "
+            f"render {render_ms:5.1f} ms | "
+            f"total {total_ms:5.1f} ms "
+            f"max {maxr:5.1f} | "
+            f"min {minr:5.1f} "
+        )
+        #if len(read_times) >= 300:
+        #    times = np.array(read_times)
+#
+##            instant = np.sum(times < 1.0)
+#
+ #           print(
+ #               f"min={times.min():.2f} | "
+  #              f"avg={times.mean():.2f} | "
+   #             f"p50={np.percentile(times, 50):.2f} | "
+    #            f"p95={np.percentile(times, 95):.2f} | "
+  #              f"max={times.max():.2f} | "
+   #             f"<1ms={instant}/{len(times)}"
+    #        )
+
+     #       read_times.clear()
         lines.append("── " * NUM_BANDS * 2)
 
         frame = "\n".join(lines)
 
         sys.stdout.write("\033[H" + frame + "\033[J")
         sys.stdout.flush()
+
+        #DEBUG 
+        t3 = time.perf_counter()
+        read_ms = (t1 - t0) * 1000
+        maxr = max(maxr,read_ms)
+        minr = (minr + read_ms) / 2
+        analysis_ms = (t2 - t1) * 1000
+        render_ms = (t3 - t2) * 1000
+        total_ms = (t3 - loop_start) * 1000
+        
 
 finally:
     #calling cursor back
