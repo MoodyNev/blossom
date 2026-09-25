@@ -1,5 +1,5 @@
 #here we are improving parec because there are inconcistencies with the reading input
-
+#e
 import numpy as np
 import wave
 import sounddevice as sd
