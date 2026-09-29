@@ -166,7 +166,7 @@ try:
 
         #going_up = normalized > smoothed 
 
-        #coefficients = np.where(going_up, ATTACK, RELEASE)
+        #coefficients = np.where(going_up, ATTACK, RELEASE) 
 
         #smoothed += coefficients * (normalized - smoothed)
 
