@@ -1,3 +1,5 @@
+#testing whether the code can detect canvas
+#and it can :smile:
 import shutil 
 import time
 
