@@ -1,6 +1,7 @@
 #understanding 
 #we are using the braille system unicode, yk that lang used for blind people
-#the weird order comes from 
+#the weird order comes from the initial braille being numbered from 1 to 6 from top to bottom and new row
+#later they added two more dots underneath to represent more chars, which lead to the numbering of bottom left as 7 and right as 8
 import shutil 
 import time
 
@@ -9,6 +10,7 @@ UI_ROWS = 0
 
 BRAILLE_BASE = 0x2800 #this is the empty char unicode
 
+#we use a 8 bit system to represent this in programming
 #so here are the cursed bit values of 
 DOT_BITS = {
     (0,0): 0x01, #dot 1 
@@ -43,6 +45,7 @@ def set_pixel(canvas, x, y):
     dot_y = y % 4
 
     #this is the or operation in python
+    #bit system, we can convert the orders by converting them
     canvas[cell_y][cell_x] |= DOT_BITS[(dot_x,dot_y)]
 
 def render_canvas(canvas):
@@ -68,16 +71,16 @@ def get_terminal_canvas():
     center_y = pixel_height // 2
 
     max_radius = min(pixel_width, pixel_height) // 2
-
-    return {
-        "cols" : cols,
-        "rows" : rows,
-        "width" : pixel_width, 
-        "height" : pixel_height,    
-        "center_x" : center_x,
-        "center_y" : center_y, 
-        "max_radius" : max_radius,
-    }
+    return pixel_width
+ #   return {
+  #      "cols" : cols,
+   #     "rows" : rows,
+#        "width" : pixel_width, 
+ ##       "height" : pixel_height,    
+   #     "center_x" : center_x,
+   #     "center_y" : center_y, 
+    #    "max_radius" : max_radius,
+    #}
 
 last_size = None
 
@@ -88,6 +91,8 @@ set_pixel(canvas, 20, 20)
 
 print(render_canvas(canvas))
 
-for x in range(200):
+t= get_terminal_canvas()
+
+for x in range(t):
     set_pixel(canvas, x ,40)
 print(render_canvas(canvas))
