@@ -82,6 +82,22 @@ def get_terminal_canvas():
         "max_radius" : max_radius,
     }
 
+def draw_circle(canvas, center_x, center_y, radius):
+    points = []
+
+    for degree in range(630):
+        theta = math.radians(degree)
+
+        x = center_x + radius * math.cos(theta)
+        y = center_y - radius * math.sin(theta)
+
+        points.append((x,y))
+
+    for i in range(len(points)):
+        x1, y1 = points[i]
+        x2, y2 = points[(i + 1) % len(points)]
+
+        draw_line(canvas, x1,y1,x2,y2)
 def draw_line(canvas, x1, x2, y1, y2):
     dx = x2 - x1
     dy = y2 - y1
@@ -102,9 +118,13 @@ def draw_line(canvas, x1, x2, y1, y2):
 last_size = None
 
 terminal = shutil.get_terminal_size()
-
 canvas = create_canvas(terminal.columns,terminal.lines)
-draw_line(canvas, 0, 400,0,400)
-draw_line(canvas, 1, 401,1,401)
+#draw_line(canvas, 0, 400,0,400)
+#draw_line(canvas, 1, 401,1,401)
+canvas_info = get_terminal_canvas()
+
+canvas = create_canvas(canvas_info["cols"], canvas_info["rows"])
+
+draw_circle(canvas, canvas_info["center_x"], canvas_info["center_y"], canvas_info["max_radius"] * 0.5)
 print(render_canvas(canvas))
 
