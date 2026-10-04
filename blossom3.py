@@ -1,7 +1,7 @@
 #understanding 
 #we are using the braille system unicode, yk that lang used for blind people
 #the weird order comes from the initial braille being numbered from 1 to 6 from top to bottom and new row
-#later they added two more dots underneath to represent mfore chars, which lead to the numbering of bottom left as 7 and right as 8
+#later they added two more dots underneath to represent mfore chars, which lead to the numbering of bottom left as 7 and right as 8 e
 import shutil 
 import time
 import math
