@@ -85,10 +85,11 @@ def get_terminal_canvas():
 def draw_circle(canvas, center_x, center_y, radius):
     points = []
 
-    for degree in range(630):
+    for degree in range(360):
         theta = math.radians(degree)
 
-        x = center_x + radius * math.cos(theta)
+        ASPECT_X = 1.25
+        x = center_x + radius * math.cos(theta) * ASPECT_X
         y = center_y - radius * math.sin(theta)
 
         points.append((x,y))
@@ -97,12 +98,13 @@ def draw_circle(canvas, center_x, center_y, radius):
         x1, y1 = points[i]
         x2, y2 = points[(i + 1) % len(points)]
 
-        draw_line(canvas, x1,y1,x2,y2)
+        draw_line(canvas, x1,x2,y1,y2)
+
 def draw_line(canvas, x1, x2, y1, y2):
     dx = x2 - x1
     dy = y2 - y1
 
-    steps = max(abs(dx), abs(dy))
+    steps = math.ceil(max(abs(dx), abs(dy)))
 
     if steps == 0:
         set_pixel(canvas, round(x1), round(x2))
