@@ -82,6 +82,25 @@ def get_terminal_canvas():
         "max_radius" : max_radius,
     }
 
+def draw_flower(canvas, center_x, center_y, base_radius, petal_size, petals, aspect_x):
+    points =[]
+
+    for degree in range(360):
+        theta = math.radians(degree)
+
+        radius = (base_radius + petal_size * math.sin(petals * theta))
+
+        x = (center_x + radius * math.cos(theta) * aspect_x)
+
+        y = (center_y - radius * math.sin(theta))
+
+        points.append((x,y))
+
+    for i in range(len(points)):
+        x1, y1 = points[i]
+        x2,y2 = points[(i+1) % len(points)]
+
+        draw_line(canvas,x1,y1,x2,y2)
 def draw_circle(canvas, center_x, center_y, radius):
     points = []
 
@@ -127,6 +146,7 @@ canvas_info = get_terminal_canvas()
 
 canvas = create_canvas(canvas_info["cols"], canvas_info["rows"])
 
-draw_circle(canvas, canvas_info["center_x"], canvas_info["center_y"], canvas_info["max_radius"] * 0.5)
+#draw_circle(canvas, canvas_info["center_x"], canvas_info["center_y"], canvas_info["max_radius"] * 0.5)
+draw_flower(canvas, canvas_info["center_x"], canvas_info["center_y"], 30, 10, 6, 1.25)
 print(render_canvas(canvas))
 
