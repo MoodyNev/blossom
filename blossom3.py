@@ -83,8 +83,10 @@ def get_terminal_canvas():
     }
 
 def draw_flower(canvas, center_x, center_y, base_radius, petal_size, petals, aspect_x):
+    #so we collect sth here
     points =[]
 
+    # we repeat that for each degree
     for degree in range(360):
         theta = math.radians(degree)
 
@@ -96,11 +98,14 @@ def draw_flower(canvas, center_x, center_y, base_radius, petal_size, petals, asp
 
         points.append((x,y))
 
+    #then we save the locations for each coordinate 
+    #and send in the drawing functions
     for i in range(len(points)):
-        x1, y1 = points[i]
+        x1,y1 = points[i]
         x2,y2 = points[(i+1) % len(points)]
 
         draw_line(canvas,x1,y1,x2,y2)
+
 def draw_circle(canvas, center_x, center_y, radius):
     points = []
 
@@ -147,6 +152,6 @@ canvas_info = get_terminal_canvas()
 canvas = create_canvas(canvas_info["cols"], canvas_info["rows"])
 
 #draw_circle(canvas, canvas_info["center_x"], canvas_info["center_y"], canvas_info["max_radius"] * 0.5)
-draw_flower(canvas, canvas_info["center_x"], canvas_info["center_y"], 30, 10, 6, 1.25)
+draw_flower(canvas, canvas_info["center_x"], canvas_info["center_y"], base_radius=30, petal_size=5, petals=6,aspect_x=1.25)
 print(render_canvas(canvas))
 
