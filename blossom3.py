@@ -83,7 +83,7 @@ def get_terminal_canvas():
     }
 
 def draw_flower(canvas, center_x, center_y, base_radius, petal_size, petals, aspect_x):
-    #so we collect sth here
+    #so we collect sth heree
     points =[]
 
     # we repeat that for each degree
