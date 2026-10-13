@@ -2,12 +2,14 @@
 #we are using the braille system unicode, yk that lang used for blind people
 #the weird order comes from the initial braille being numbered from 1 to 6 from top to bottom and new row
 #later they added two more dots underneath to represent mfore chars, which lead to the numbering of bottom left as 7 and right as 8 e
+#BEAUTIFUL FLOWER PATTERNS ABSOLUTE CINEMAAAAAA
 import shutil 
 import time
 import math
 
 TARGET_FPS = 60 
 UI_ROWS = 0
+ASPECT_X = 1.25
 
 BRAILLE_BASE = 0x2800 #this is the empty char unicode
 
@@ -26,6 +28,7 @@ DOT_BITS = {
 }
 
 #since this is cooked we gonna make array representing cells (since individuals pixel darstellung would be cooked)
+#this deals with the maths i dont want to calculate everytime
 def create_canvas(cols,rows):
     return[
         [0 for _ in range(cols)]
@@ -49,6 +52,7 @@ def set_pixel(canvas, x, y):
     #bit system, we can convert the orders by converting them
     canvas[cell_y][cell_x] |= DOT_BITS[(dot_x,dot_y)]
 
+#makes the output
 def render_canvas(canvas):
     lines = []
 
@@ -82,6 +86,7 @@ def get_terminal_canvas():
         "max_radius" : max_radius,
     }
 
+#draws a flower as the name suggests, it walks around a circle so to say and then changes the distance based on degree, which creates a flower like circle pattern
 def draw_flower(canvas, center_x, center_y, base_radius, petal_size, petals, aspect_x):
     #so we collect sth hereee
     points =[]
@@ -100,6 +105,7 @@ def draw_flower(canvas, center_x, center_y, base_radius, petal_size, petals, asp
 
     #then we save the locations for each coordinate 
     #and send in the drawing functions
+    #this simply connects the dots we calculated before and draws em
     for i in range(len(points)):
         x1,y1 = points[i]
         x2,y2 = points[(i+1) % len(points)]
@@ -119,12 +125,12 @@ def draw_circle(canvas, center_x, center_y, radius):
         points.append((x,y))
 
     for i in range(len(points)):
-        x1, y1 = points[i]
-        x2, y2 = points[(i + 1) % len(points)]
+        x1, x2 = points[i]
+        y1, y2 = points[(i + 1) % len(points)]
 
         draw_line(canvas, x1,x2,y1,y2)
 
-def draw_line(canvas, x1, x2, y1, y2):
+def draw_line(canvas, x1, y1, x2, y2):
     dx = x2 - x1
     dy = y2 - y1
 
@@ -152,6 +158,7 @@ canvas_info = get_terminal_canvas()
 canvas = create_canvas(canvas_info["cols"], canvas_info["rows"])
 
 #draw_circle(canvas, canvas_info["center_x"], canvas_info["center_y"], canvas_info["max_radius"] * 0.5)
-draw_flower(canvas, canvas_info["center_x"], canvas_info["center_y"], base_radius=30, petal_size=5, petals=6,aspect_x=1.25)
+draw_flower(canvas, canvas_info["center_x"], canvas_info["center_y"], base_radius=20, petal_size=50, petals=6,aspect_x=1.25)
+
 print(render_canvas(canvas))
 
