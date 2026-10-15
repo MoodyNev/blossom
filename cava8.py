@@ -1,7 +1,7 @@
 #we are smoothing the visualizer better by making the relase and attack time based
 #also we are making imrovements at unicode rendering 
 import numpy as np
-import wave
+#import wave
 import sounddevice as sd
 import sys
 import subprocess
@@ -115,15 +115,15 @@ try:
     while True:
         with buffer_lock:
             analysis_buffer = audio_buffer.copy()
-        loop_start = time.perf_counter()
+        #loop_start = time.perf_counter()
 
         #DEBUG
-        t0 = time.perf_counter()
+        #t0 = time.perf_counter()
 
         #DEBUG
-        t1 = time.perf_counter()
+        #t1 = time.perf_counter()
 
-        read_times.append((t1 - t0) * 1000)
+        #read_times.append((t1 - t0) * 1000)
 
         #fft
         spectrum = np.fft.rfft(analysis_buffer * window)
@@ -274,13 +274,13 @@ try:
         sys.stdout.flush()
 
         #DEBUG 
-        t3 = time.perf_counter()
-        read_ms = (t1 - t0) * 1000
-        maxr = max(maxr,read_ms)
-        minr = (minr + read_ms) / 2
-        analysis_ms = (t2 - t1) * 1000
-        render_ms = (t3 - t2) * 1000
-        total_ms = (t3 - loop_start) * 1000
+        #t3 = time.perf_counter()
+        #read_ms = (t1 - t0) * 1000
+        #maxr = max(maxr,read_ms)
+        #minr = (minr + read_ms) / 2
+        #analysis_ms = (t2 - t1) * 1000
+        #render_ms = (t3 - t2) * 1000
+        #total_ms = (t3 - loop_start) * 1000
 
         next_frame += FRAME_TIME
 

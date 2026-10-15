@@ -111,16 +111,17 @@ def draw_flower(canvas, center_x, center_y, base_radius, petal_size, petals):
 #draw waves, yeah.. this is drawing waves
 #
 #
-def draw_waves(canvas, center_x, center_y, terminal_length):
+def draw_waves(canvas, center_x, center_y, terminal_length, number_of_waves, height_of_waves):
     points = []
     for times in range(2):
         print(times)
         for point in range(terminal_length):
             #point is interpreted in radians do we need theta for transformation
             #while defining theta we can also define the wave number
-            theta = (point / terminal_length) * 2 * math.pi * 4
-            x = point #+ (point*times)
-            y = center_y + math.sin(theta) * 10
+            theta = (point / terminal_length) * 2 * math.pi * number_of_waves
+            x = point + (terminal_length*times)
+            print(x)
+            y = center_y + math.sin(theta) * height_of_waves
             points.append((x,y))
 
     #drawing
@@ -175,8 +176,8 @@ canvas_info = get_terminal_canvas()
 canvas = create_canvas(canvas_info["cols"], canvas_info["rows"])
 
 #draw_circle(canvas, canvas_info["center_x"], canvas_info["center_y"], canvas_info["max_radius"] * 0.5)
-#draw_flower(canvas, canvas_info["center_x"], canvas_info["center_y"], base_radius=20, petal_size=20, petals=6)
-draw_waves(canvas, canvas_info["center_x"], canvas_info["center_y"], canvas_info["cols"])
+draw_flower(canvas, canvas_info["center_x"], canvas_info["center_y"], base_radius=20, petal_size=50, petals=6)
+draw_waves(canvas, canvas_info["center_x"], canvas_info["center_y"], canvas_info["cols"], 4, 20)
 
 print(render_canvas(canvas))
 
