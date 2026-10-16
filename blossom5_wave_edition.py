@@ -26,7 +26,7 @@ BYTES_PER_SAMPLE= 2
 
 DEVICE = "bluez_output.88_8E_68_E1_9E_A8.1.monitor"
 
-BRAILLE_BASE = 0x2800 #this is the empty char unicode
+BRAILLE_BASE = 0x2800 #this is the empty char unicodee
 
 #we use a 8 bit system to represent this in programming
 #so here are the cursed bit values of 
