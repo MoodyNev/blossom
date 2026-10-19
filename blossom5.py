@@ -24,9 +24,49 @@ SAMPLE_RATE = 48000
 CHANNELS = 2
 BYTES_PER_SAMPLE= 2
 
+#HERE COMES LIKE MORE AUDI HEAVY STUFF
 DEVICE = "bluez_output.88_8E_68_E1_9E_A8.1.monitor"
 
-BRAILLE_BASE = 0x2800 #this is the empty char unicodeee
+audio_buffer = np.zeros(FFT_SIZE, dtype=np.float32)
+buffer_lock = threading.Lock() 
+
+stream = subprocess.Popen(
+    [
+        "parec",
+        "--raw",
+        f"--device={DEVICE}",
+        "--format=s16le",
+        "--rate=48000",
+        "--channels=2",
+
+        "--latency-msec=20",
+        "--process-time-msec=10"
+    ],
+    stdout=subprocess.PIPE
+)
+
+def capture_audio():
+    global audio_buffer
+
+    while True:
+        raw_data = stream.stdout.read(READ_SIZE * CHANNELS * BYTES_PER_SAMPLE)
+
+        if not raw_data:
+            break
+
+        samples = np.frombuffer(raw_data, dtype="<i2").reshape(-1, CHANNELS)
+        mono = np.mean(samples.astype(np.float32), axis = 1) / 32768.0
+
+        with buffer_lock:
+            audio_buffer[:-READ_SIZE] = audio_buffer[READ_SIZE:]
+            audio_buffer[-READ_SIZE:] = mono
+
+audio_thread = threading.Thread(target= capture_audio, daemon=True)
+
+audio_thread.start()
+window = np.hanning(FFT_SIZE)
+
+BRAILLE_BASE = 0x2800 #this is the empty char unicodeeeee
 
 #we use a 8 bit system to represent this in programming
 #so here are the cursed bit values of 
@@ -201,3 +241,31 @@ draw_waves(canvas, canvas_info["center_x"], canvas_info["center_y"], canvas_info
 
 print(render_canvas(canvas))
 
+#HERE I WILL TRY TO PUT IN THE ACTUAL CODE IN A LOOP
+
+raw_data = stream.stdout.read(FFT_SIZE * CHANNELS * BYTES_PER_SAMPLE)
+
+samples = np.frombuffer(raw_data,dtype="<i2").reshape(-1,CHANNELS)
+analysis_buffer = np.mean(samples.astype(np.float32),axis=1) / 32768.0
+
+FRAME_TIME = 1.0 / TARGET_FPS
+next_frame = time.perf_counter()
+last_frame_time = 0
+
+try:
+    while True:
+        with buffer_lock:
+            analysis_buffer = audio_buffer.copy()
+
+        #fft
+        spectrum = np.fft.rfft(analysis_buffer * window)
+        magnitudes = (2* np.abs(spectrum)/np.sum(window))
+
+        #normally we used to convert the input into bands, now we are gonna try convert em into waves
+        #we used to divide the input into bands using geomspace, now we have a wider range where we can go wild
+        #first of all we know that our limits are the terminal height and the frequency we want to process
+        #
+
+finally:
+    #calling cursor back
+    print("\033[?25h", end="")
