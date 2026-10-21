@@ -24,7 +24,7 @@ SAMPLE_RATE = 48000
 CHANNELS = 2
 BYTES_PER_SAMPLE= 2
 
-#HERE COMES LIKE MORE AUDI HEAVY STUFF
+#HERE COMES LIKE MORE AUDIO HEAVY STUFF
 DEVICE = "bluez_output.88_8E_68_E1_9E_A8.1.monitor"
 
 audio_buffer = np.zeros(FFT_SIZE, dtype=np.float32)
@@ -264,7 +264,8 @@ try:
         #normally we used to convert the input into bands, now we are gonna try convert em into waves
         #we used to divide the input into bands using geomspace, now we have a wider range where we can go wild
         #first of all we know that our limits are the terminal height and the frequency we want to process
-        #
+        #instead of bands we can try to use terminal width
+        #eee
 
 finally:
     #calling cursor back
