@@ -265,7 +265,7 @@ try:
         #we used to divide the input into bands using geomspace, now we have a wider range where we can go wild
         #first of all we know that our limits are the terminal height and the frequency we want to process
         #instead of bands we can try to use terminal width
-        #eee
+        #eeee
 
 finally:
     #calling cursor back
