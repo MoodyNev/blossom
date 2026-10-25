@@ -264,8 +264,8 @@ try:
         #normally we used to convert the input into bands, now we are gonna try convert em into waves
         #we used to divide the input into bands using geomspace, now we have a wider range where we can go wild
         #first of all we know that our limits are the terminal height and the frequency we want to process
-        #instead of bands we can try to use terminal width
-        #eeeeee
+        #instead of bands we can try to use terminal widthe
+        
 
 finally:
     #calling cursor back
