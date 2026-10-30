@@ -258,6 +258,7 @@ try:
             analysis_buffer = audio_buffer.copy()
 
         #fftt
+        #more e updates 
         spectrum = np.fft.rfft(analysis_buffer * window)
         magnitudes = (2* np.abs(spectrum)/np.sum(window))
 
