@@ -1,4 +1,4 @@
-#we are adding the wave formed lines now
+#this is the one where we put everything really in motion nicely synced with the music
 import shutil 
 import time
 import math
@@ -10,7 +10,7 @@ import threading
 
 #this is mostly from the blossom stuff
 UI_ROWS = 0
-ASPECT_X = 1.25
+ASPECT_X = 1.25 #this because fonts work in a weird way
 
 #this is for the audio import stuff
 TARGET_FPS = 60
@@ -19,12 +19,11 @@ READ_SIZE = 960
 TARGET_FPS = 120
 REFERENCE_FPS = 60
 SAMPLE_RATE = 48000
-#NUM_BANDS = 20
-#MAX_HEIGHT = 50 dotn forget to  implement this right for the wave and folower part
 CHANNELS = 2
 BYTES_PER_SAMPLE= 2
+#-------------------------------------------constants-----------------------------------------------
 
-#HERE COMES LIKE MORE AUDIO HEAVY STUFF
+#audio porcessing 
 DEVICE = "bluez_output.88_8E_68_E1_9E_A8.1.monitor"
 
 audio_buffer = np.zeros(FFT_SIZE, dtype=np.float32)
@@ -65,6 +64,8 @@ audio_thread = threading.Thread(target= capture_audio, daemon=True)
 
 audio_thread.start()
 window = np.hanning(FFT_SIZE)
+frequencies = np.fft.rfftfreq(FFT_SIZE, d=1/SAMPLE_RATE)
+#--------------------------------------audio import-------------------------------------------------------------
 
 BRAILLE_BASE = 0x2800 #this is the empty char unicodeeeee
 
@@ -141,6 +142,7 @@ def get_terminal_canvas():
         "center_y" : center_y, 
         "max_radius" : max_radius,
     }
+#---------------------------------------setting up braille and canvas--------------------------------------
 
 #draws a flower as the name suggests, it walks around a circle so to say and then changes the distance based on degree, which creates a flower like circle pattern
 def draw_flower(canvas, center_x, center_y, base_radius, petal_size, petals):
@@ -168,19 +170,15 @@ def draw_flower(canvas, center_x, center_y, base_radius, petal_size, petals):
 
         draw_line(canvas,x1,y1,x2,y2)
 
-#draw waves, yeah.. this is drawing waves
-#
-#
-def draw_waves(canvas, center_x, center_y, terminal_length, number_of_waves, height_of_waves):
+#waves we mostly use sin for it
+def draw_waves(canvas, center_x, center_y, terminal_length, number_of_waves, height_of_waves,lol):
     points = []
     for times in range(2):
-        print(times)
         for point in range(terminal_length):
             #point is interpreted in radians do we need theta for transformation
             #while defining theta we can also define the wave number
-            theta = (point / terminal_length) * 2 * math.pi * number_of_waves
+            theta = (point / terminal_length) * lol * math.pi * number_of_waves
             x = point + (terminal_length*times)
-            print(x)
             y = center_y + math.sin(theta) * height_of_waves
             points.append((x,y))
 
@@ -229,19 +227,18 @@ last_size = None
 
 terminal = shutil.get_terminal_size()
 canvas = create_canvas(terminal.columns,terminal.lines)
-#draw_line(canvas, 0, 400,0,400)
-#draw_line(canvas, 1, 401,1,401)
 canvas_info = get_terminal_canvas()
 
 canvas = create_canvas(canvas_info["cols"], canvas_info["rows"])
 
 #draw_circle(canvas, canvas_info["center_x"], canvas_info["center_y"], canvas_info["max_radius"] * 0.5)
-draw_flower(canvas, canvas_info["center_x"], canvas_info["center_y"], base_radius=20, petal_size=50, petals=6)
-draw_waves(canvas, canvas_info["center_x"], canvas_info["center_y"], canvas_info["cols"], 4, 20)
+#draw_flower(canvas, canvas_info["center_x"], canvas_info["center_y"], base_radius=20, petal_size=50, petals=6)
+#draw_waves(canvas, canvas_info["center_x"], canvas_info["center_y"], canvas_info["cols"], 4, 20)
 
 print(render_canvas(canvas))
 
 #HERE I WILL TRY TO PUT IN THE ACTUAL CODE IN A LOOP
+
 
 raw_data = stream.stdout.read(FFT_SIZE * CHANNELS * BYTES_PER_SAMPLE)
 
@@ -252,6 +249,9 @@ FRAME_TIME = 1.0 / TARGET_FPS
 next_frame = time.perf_counter()
 last_frame_time = 0
 
+#lil debug
+NUM_BANDS = 20
+band_edges = np.geomspace(40,16000, NUM_BANDS +1)
 try:
     while True:
         with buffer_lock:
@@ -262,10 +262,22 @@ try:
         spectrum = np.fft.rfft(analysis_buffer * window)
         magnitudes = (2* np.abs(spectrum)/np.sum(window))
 
+        low = band_edges[1]
+        high = band_edges[1 + 1]
+        mask = ((frequencies >= low) & (frequencies < high))
+        band_values = magnitudes[mask]
+        band_magnitude = np.sqrt(np.mean(band_values ** 2))
+        #print(band_magnitude)
+        canvas = create_canvas(canvas_info["cols"], canvas_info["rows"])
+        draw_waves(canvas, canvas_info["center_x"], canvas_info["center_y"], canvas_info["cols"], 4, 20, band_magnitude)
+        sys.stdout.write("\033[H" + render_canvas(canvas) + "\033[J")
+        sys.stdout.flush()
+
         #normally we used to convert the input into bands, now we are gonna try convert em into waves
         #we used to divide the input into bands using geomspace, now we have a wider range where we can go wild
         #first of all we know that our limits are the terminal height and the frequency we want to process
         #instead of bands we can try to use terminal widthe
+
         
 
 finally:
