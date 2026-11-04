@@ -171,13 +171,13 @@ def draw_flower(canvas, center_x, center_y, base_radius, petal_size, petals):
         draw_line(canvas,x1,y1,x2,y2)
 
 #waves we mostly use sin for it
-def draw_waves(canvas, center_x, center_y, terminal_length, number_of_waves, height_of_waves,lol):
+def draw_waves(canvas, center_x, center_y, terminal_length, number_of_waves, height_of_waves):
     points = []
     for times in range(2):
         for point in range(terminal_length):
             #point is interpreted in radians do we need theta for transformation
             #while defining theta we can also define the wave number
-            theta = (point / terminal_length) * lol * math.pi * number_of_waves
+            theta = (point / terminal_length) * 2 * math.pi * number_of_waves
             x = point + (terminal_length*times)
             y = center_y + math.sin(theta) * height_of_waves
             points.append((x,y))
@@ -245,40 +245,166 @@ raw_data = stream.stdout.read(FFT_SIZE * CHANNELS * BYTES_PER_SAMPLE)
 samples = np.frombuffer(raw_data,dtype="<i2").reshape(-1,CHANNELS)
 analysis_buffer = np.mean(samples.astype(np.float32),axis=1) / 32768.0
 
+#lil debug
+NUM_BANDS = 15
 FRAME_TIME = 1.0 / TARGET_FPS
 next_frame = time.perf_counter()
 last_frame_time = 0
+smoothed = np.zeros(NUM_BANDS)
+ATTACK = .5
+RELEASE = 0.15
+peak_level = 0.01
+PEAK_ATTACK = 1
+PEAK_RELEASE = 0.005
+MAX_HEIGHT = 50
+PARTIAL_BLOCKS = " ▁▂▃▄▅▆▇█"
+fps = 0.0
+fps_frames = 0
+fps_timer = time.perf_counter()
 
-#lil debug
-NUM_BANDS = 20
+
 band_edges = np.geomspace(40,16000, NUM_BANDS +1)
 try:
     while True:
         with buffer_lock:
             analysis_buffer = audio_buffer.copy()
 
-        #fftt
-        #more e updates e
+        #fft
         spectrum = np.fft.rfft(analysis_buffer * window)
         magnitudes = (2* np.abs(spectrum)/np.sum(window))
 
-        low = band_edges[1]
-        high = band_edges[1 + 1]
-        mask = ((frequencies >= low) & (frequencies < high))
-        band_values = magnitudes[mask]
-        band_magnitude = np.sqrt(np.mean(band_values ** 2))
-        #print(band_magnitude)
-        canvas = create_canvas(canvas_info["cols"], canvas_info["rows"])
-        draw_waves(canvas, canvas_info["center_x"], canvas_info["center_y"], canvas_info["cols"], 4, 20, band_magnitude)
-        sys.stdout.write("\033[H" + render_canvas(canvas) + "\033[J")
+        #convert fft bins into 16 bands
+        band_magnitudes = []
+
+        for i in range(NUM_BANDS):
+            low = band_edges[i]
+            high = band_edges[i + 1]
+
+            mask = ((frequencies >= low) & (frequencies < high))
+            band_values = magnitudes[mask]
+            if len(band_values) > 0:
+                band_magnitude = np.sqrt(np.mean(band_values ** 2))
+            else:
+                band_magnitude = 0.0
+            band_magnitudes.append(band_magnitude)
+
+        band_magnitudes = np.array(band_magnitudes)
+
+        POWER = 0.5 #here is a variable you can play with but id rather not
+        band_magnitudes = band_magnitudes ** POWER
+
+        #kind of looks similar to geompace, but instead of potentials we evenly divide the spaces between values
+        weights = np.linspace(0.5,2.0,NUM_BANDS)
+
+        band_magnitudes *= weights
+
+        current_peak = np.max(band_magnitudes)
+        if current_peak > peak_level:
+            peak_level += PEAK_ATTACK * (current_peak - peak_level)
+        else:
+            peak_level += PEAK_RELEASE * (current_peak - peak_level)
+
+        normalized = band_magnitudes / max(peak_level, 1e-6)
+
+        normalized = np.clip(normalized, 0.0, 1.0)
+
+        now = time.perf_counter()
+        dt = now - last_frame_time
+        last_frame_time = now
+
+        #this is to prevent time count after terminal cancel
+        dt = min(dt,0.1)
+
+        #we make attack and relase so that it adapts to passing time (aka the time betwen the frames)
+        attack = 1 - (1 - ATTACK) ** (dt * REFERENCE_FPS)
+        release = 1 - (1- RELEASE) ** (dt * REFERENCE_FPS)
+
+        going_up = normalized > smoothed
+
+        coefficients = np.where(going_up, attack, release)
+
+        smoothed += coefficients * (normalized - smoothed)
+
+        bar_height = smoothed[i] * MAX_HEIGHT
+
+        whole = int(bar_height)
+        #float
+        fraction = bar_height - whole
+
+        partial_index = round(fraction * 8)
+        partial = PARTIAL_BLOCKS[partial_index] + PARTIAL_BLOCKS[partial_index]
+        
+        heights = []
+        for value in smoothed:
+            height = int(value *MAX_HEIGHT)
+            height = max(0,min(MAX_HEIGHT,height))
+            heights.append(height)
+        render_heights = []
+
+        for value in smoothed * MAX_HEIGHT:
+            whole = int(value)
+            fraction = value - whole
+
+            partial_index = round(fraction * 8)
+
+            if partial_index == 8:
+                whole += 1
+                partial_index = 0
+
+            partial = PARTIAL_BLOCKS[partial_index]
+
+            render_heights.append((whole,partial))
+
+        #mirrored output :3
+        lines = []
+       
+        for row in range(MAX_HEIGHT, 0, -1):
+            line = ""
+
+            #left side 
+            for whole, partial in reversed(render_heights):
+                if row <= whole:
+                    line += "██ "
+                elif row == whole + 1 and partial != " ":
+                    line += partial * 2 + " "
+                else:
+                    line += "   "
+
+            #right side
+            for whole, partial in render_heights:
+                if row <= whole:
+                    line += "██ "
+                elif row == whole + 1 and partial != " ":
+                    line += partial * 2 + " "
+                else:
+                    line += "   "
+            
+
+            lines.append(line)
+        fps_frames += 1
+        now = time.perf_counter()
+        
+        if now - fps_timer >= 1.0:
+            fps = fps_frames / (now - fps_timer)
+            fps_frames = 0
+            fps_timer = now
+
+        lines.append("── " * NUM_BANDS * 2)
+
+        frame = "\n".join(lines)
+
+        sys.stdout.write("\033[H" + frame + "\033[J")
         sys.stdout.flush()
 
-        #normally we used to convert the input into bands, now we are gonna try convert em into waves
-        #we used to divide the input into bands using geomspace, now we have a wider range where we can go wild
-        #first of all we know that our limits are the terminal height and the frequency we want to process
-        #instead of bands we can try to use terminal widthe
+        next_frame += FRAME_TIME
 
-        
+        sleep_time = next_frame - time.perf_counter()
+
+        if sleep_time > 0:
+            time.sleep(sleep_time)
+        else:
+            #just in case the terminal is late
+            next_frame = time.perf_counter() 
 
 finally:
     #calling cursor back
