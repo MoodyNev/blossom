@@ -237,7 +237,7 @@ canvas = create_canvas(canvas_info["cols"], canvas_info["rows"])
 
 print(render_canvas(canvas))
 
-#HERE I WILL TRY TO PUT IN THE ACTUAL CODE IN A LOOP
+#HERE I WILL TRY TO PUT IN THE ACTUAL CODE IN A LOOPe
 
 
 raw_data = stream.stdout.read(FFT_SIZE * CHANNELS * BYTES_PER_SAMPLE)
