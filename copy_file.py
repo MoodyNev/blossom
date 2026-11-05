@@ -40,9 +40,9 @@ DEVICE = "bluez_output.88_8E_68_E1_9E_A8.1.monitor"
 #smoothing constants
 smoothed = np.zeros(NUM_BANDS)
 ATTACK = .5
-RELEASE = 0.15
+RELEASE = 0.3
 peak_level = 0.01
-PEAK_ATTACK = 1
+PEAK_ATTACK = .5
 PEAK_RELEASE = 0.005
 
 #so we add more unicodes here :3

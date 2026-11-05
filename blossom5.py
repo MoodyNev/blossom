@@ -264,6 +264,11 @@ fps_timer = time.perf_counter()
 
 
 band_edges = np.geomspace(40,16000, NUM_BANDS +1)
+
+#-----------FIND THE PART THAT EXACTLY TELLS THE HEIGHT OF THE BARS
+# and then store them in an array, then use it for the coordinates
+# perhaps you can try by just drawing points first and then turn them into waves
+
 try:
     while True:
         with buffer_lock:
@@ -351,31 +356,30 @@ try:
                 whole += 1
                 partial_index = 0
 
-            partial = PARTIAL_BLOCKS[partial_index]
+            partial = 5
 
             render_heights.append((whole,partial))
 
         #mirrored output :3
+        #this is the drawing part lets start by adjusting it a little
         lines = []
        
         for row in range(MAX_HEIGHT, 0, -1):
-            line = ""
+            line = 0
 
             #left side 
             for whole, partial in reversed(render_heights):
                 if row <= whole:
-                    line += "██ "
-                elif row == whole + 1 and partial != " ":
-                    line += partial * 2 + " "
-                else:
-                    line += "   "
+                    line += 5
+                elif row == whole + 1 and partial != 0:
+                    line += partial * 2 + 1
 
             #right side
             for whole, partial in render_heights:
                 if row <= whole:
-                    line += "██ "
-                elif row == whole + 1 and partial != " ":
-                    line += partial * 2 + " "
+                    line += 5
+                elif row == whole + 1 and partial != 0:
+                    line += partial * 2 + 1
                 else:
                     line += "   "
             
