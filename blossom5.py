@@ -188,7 +188,6 @@ def draw_waves(canvas, center_x, center_y, terminal_length, number_of_waves, hei
         x2, y2 = points[(i +1)]
         draw_line(canvas, x1,y1,x2,y2)
 
-
 def draw_circle(canvas, center_x, center_y, radius):
     points = []
 
@@ -231,13 +230,9 @@ canvas_info = get_terminal_canvas()
 
 canvas = create_canvas(canvas_info["cols"], canvas_info["rows"])
 
-#draw_circle(canvas, canvas_info["center_x"], canvas_info["center_y"], canvas_info["max_radius"] * 0.5)
-#draw_flower(canvas, canvas_info["center_x"], canvas_info["center_y"], base_radius=20, petal_size=50, petals=6)
-#draw_waves(canvas, canvas_info["center_x"], canvas_info["center_y"], canvas_info["cols"], 4, 20)
-
 print(render_canvas(canvas))
 
-#HERE I WILL TRY TO PUT IN THE ACTUAL CODE IN A LOOPe
+#HERE I WILL TRY TO PUT IN THE ACTUAL CODE IN A LOOP
 
 
 raw_data = stream.stdout.read(FFT_SIZE * CHANNELS * BYTES_PER_SAMPLE)
@@ -246,7 +241,11 @@ samples = np.frombuffer(raw_data,dtype="<i2").reshape(-1,CHANNELS)
 analysis_buffer = np.mean(samples.astype(np.float32),axis=1) / 32768.0
 
 #lil debug
-NUM_BANDS = 15
+
+#increasing num bands too much creates loops for some bands since the maths for the frequency spacing calculation is: SAMPLE_RATE / FFT_SIZE. 
+#for our current constants the value is: 48000 / 2048 ~ 23 there fore any band number greater than 23 creates gaps
+#increasing these values may cause lags, so i am gonna add some other maths while we are drawing the lines at the loop
+NUM_BANDS = 20
 FRAME_TIME = 1.0 / TARGET_FPS
 next_frame = time.perf_counter()
 last_frame_time = 0
@@ -257,11 +256,9 @@ peak_level = 0.01
 PEAK_ATTACK = 1
 PEAK_RELEASE = 0.005
 MAX_HEIGHT = 50
-PARTIAL_BLOCKS = " ▁▂▃▄▅▆▇█"
 fps = 0.0
 fps_frames = 0
 fps_timer = time.perf_counter()
-
 
 band_edges = np.geomspace(40,16000, NUM_BANDS +1)
 
@@ -275,6 +272,7 @@ try:
             analysis_buffer = audio_buffer.copy()
 
         #fft
+        #i wanted to remove abs here to get negative values but apparently that isnt possible, we are using abs to convert some complex numbers
         spectrum = np.fft.rfft(analysis_buffer * window)
         magnitudes = (2* np.abs(spectrum)/np.sum(window))
 
@@ -335,56 +333,55 @@ try:
         whole = int(bar_height)
         #float
         fraction = bar_height - whole
-
-        partial_index = round(fraction * 8)
-        partial = PARTIAL_BLOCKS[partial_index] + PARTIAL_BLOCKS[partial_index]
         
         heights = []
         for value in smoothed:
             height = int(value *MAX_HEIGHT)
             height = max(0,min(MAX_HEIGHT,height))
             heights.append(height)
-        render_heights = []
 
+        render_heights = []
         for value in smoothed * MAX_HEIGHT:
             whole = int(value)
-            fraction = value - whole
+            render_heights.append(whole)
 
-            partial_index = round(fraction * 8)
+        #task: give a proper shape to waveforms
+        #since we are not increasing the sample rate, we are gonna use sin to create more wavelike forms
 
-            if partial_index == 8:
-                whole += 1
-                partial_index = 0
 
-            partial = 5
+        debug_value = 1
+        previous_x = 0
+        previous_y = canvas_info["center_y"]
+        s_value = (int) (canvas_info["cols"] / NUM_BANDS)
+        
+        for whole in render_heights:
+            x_value = s_value * debug_value
+            y_value = canvas_info["center_y"] - whole
+            theta = (x_value / canvas_info["cols"]) * 2 * math.pi * 7
+            y_value = canvas_info["center_y"] - whole * canvas_info["rows"] * np.sin(theta) * 0.05
+            draw_flower(canvas, canvas_info["center_x"], canvas_info["center_y"], y_value / 4, whole, 8 )
+            draw_line(canvas, previous_x, previous_y, x_value, y_value)
+            draw_line(canvas, previous_x, previous_y, x_value - 1, y_value)
+            draw_line(canvas, previous_x, previous_y, x_value + 1, y_value)
+            debug_value += 1
+            previous_x = x_value
+            previous_y = y_value
 
-            render_heights.append((whole,partial))
+        debug_value = 1
+        for whole in reversed(render_heights):
+            x_value = s_value * debug_value + canvas_info["center_x"]
+            y_value = canvas_info["center_y"] - whole *2
+            theta = (x_value / canvas_info["cols"]) * 2 * math.pi * 7
+            y_value = canvas_info["center_y"] - whole * canvas_info["rows"] * np.sin(theta) * 0.05
+            draw_line(canvas, previous_x, previous_y, x_value , y_value)
+            draw_line(canvas, previous_x, previous_y, x_value - 1, y_value)
+            draw_line(canvas, previous_x, previous_y, x_value + 1, y_value)
+            debug_value += 1
+            previous_x = x_value
+            previous_y = y_value
 
-        #mirrored output :3
-        #this is the drawing part lets start by adjusting it a little
-        lines = []
-       
-        for row in range(MAX_HEIGHT, 0, -1):
-            line = 0
-
-            #left side 
-            for whole, partial in reversed(render_heights):
-                if row <= whole:
-                    line += 5
-                elif row == whole + 1 and partial != 0:
-                    line += partial * 2 + 1
-
-            #right side
-            for whole, partial in render_heights:
-                if row <= whole:
-                    line += 5
-                elif row == whole + 1 and partial != 0:
-                    line += partial * 2 + 1
-                else:
-                    line += "   "
-            
-
-            lines.append(line)
+        draw_line(canvas, previous_x, previous_y, canvas_info["cols"] *2 , canvas_info["center_y"])
+        
         fps_frames += 1
         now = time.perf_counter()
         
@@ -393,12 +390,9 @@ try:
             fps_frames = 0
             fps_timer = now
 
-        lines.append("── " * NUM_BANDS * 2)
-
-        frame = "\n".join(lines)
-
-        sys.stdout.write("\033[H" + frame + "\033[J")
+        sys.stdout.write(render_canvas(canvas))
         sys.stdout.flush()
+        canvas = create_canvas(canvas_info["cols"], canvas_info["rows"])
 
         next_frame += FRAME_TIME
 
