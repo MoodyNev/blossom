@@ -7,6 +7,8 @@ import sounddevice as sd
 import sys
 import subprocess
 import threading
+from scipy.interpolate import CubicSpline
+from scipy.interpolate import PchipInterpolator
 
 #this is mostly from the blossom stuff
 UI_ROWS = 0
@@ -23,7 +25,7 @@ CHANNELS = 2
 BYTES_PER_SAMPLE= 2
 #-------------------------------------------constants-----------------------------------------------
 
-#audio porcessing 
+#audio processing 
 DEVICE = "bluez_output.88_8E_68_E1_9E_A8.1.monitor"
 
 audio_buffer = np.zeros(FFT_SIZE, dtype=np.float32)
@@ -353,16 +355,33 @@ try:
         previous_x = 0
         previous_y = canvas_info["center_y"]
         s_value = (int) (canvas_info["cols"] / NUM_BANDS)
-        
+        lol = 1
+
+        pointxy = ([[0, canvas_info["center_y"]]])
+
+        #render_heights = np.convolve(smoothed, render_heights, mode = "same")
         for whole in render_heights:
             x_value = s_value * debug_value
             y_value = canvas_info["center_y"] - whole
-            theta = (x_value / canvas_info["cols"]) * 2 * math.pi * 7
-            y_value = canvas_info["center_y"] - whole * canvas_info["rows"] * np.sin(theta) * 0.05
-            draw_flower(canvas, canvas_info["center_x"], canvas_info["center_y"], y_value / 4, whole, 8 )
-            draw_line(canvas, previous_x, previous_y, x_value, y_value)
-            draw_line(canvas, previous_x, previous_y, x_value - 1, y_value)
-            draw_line(canvas, previous_x, previous_y, x_value + 1, y_value)
+            theta = (x_value / (canvas_info["cols"] * 2)) * 2 * math.pi * 15
+            # dont forget to make everything in a way that everything meets at a single point
+            # so we gotta play with the max length in a way so that when the whole is 0 the terminal length is also 0
+            y_value = canvas_info["center_y"] - whole * canvas_info["rows"] * np.sin(theta) * 0.04
+
+            # kinda want the flower to rotate and i dont want it to be perfecty symmetrical
+            # make the curves smoother
+            # the flower doent meet at the center atm
+            # also test adding a little rotation to the flower 
+            # also the petal number shouldnt be based on the loop count but different frequencies
+            if(debug_value % 4 == 0):
+                draw_flower(canvas, canvas_info["center_x"], canvas_info["center_y"], y_value / 4 * whole * 0.05, whole / lol , 4 * lol )
+                lol += 1
+                if lol % 4 == 0:
+                    lol = 1
+            
+            #making curves smoother requires somepthing called curved interpolation
+            pointxy.append([x_value,y_value])
+            #draw_line(canvas, previous_x, previous_y, x_value, y_value)
             debug_value += 1
             previous_x = x_value
             previous_y = y_value
@@ -371,14 +390,26 @@ try:
         for whole in reversed(render_heights):
             x_value = s_value * debug_value + canvas_info["center_x"]
             y_value = canvas_info["center_y"] - whole *2
-            theta = (x_value / canvas_info["cols"]) * 2 * math.pi * 7
-            y_value = canvas_info["center_y"] - whole * canvas_info["rows"] * np.sin(theta) * 0.05
-            draw_line(canvas, previous_x, previous_y, x_value , y_value)
-            draw_line(canvas, previous_x, previous_y, x_value - 1, y_value)
-            draw_line(canvas, previous_x, previous_y, x_value + 1, y_value)
+            theta = (x_value / (canvas_info["cols"]* 2)) * 2 * math.pi * 15
+            y_value = canvas_info["center_y"] - whole * canvas_info["rows"] * np.sin(theta) * 0.04
+            pointxy.append([x_value,y_value])
+            #draw_line(canvas, previous_x, previous_y, x_value , y_value)
             debug_value += 1
             previous_x = x_value
             previous_y = y_value
+
+        pointxy.append([canvas_info["cols"] * 2, canvas_info["center_y"]])
+        xs,ys = zip(*pointxy)
+        cs = CubicSpline(xs,ys)
+        smooth_x = np.linspace(xs[0], xs[-1], 500)
+        smooth_y = cs(smooth_x)
+
+        previous_x = smooth_x[0]
+        previous_y = smooth_y[0]
+        for i in range(500):
+            draw_line(canvas, previous_x, previous_y, smooth_x[i], smooth_y[i])
+            previous_x = smooth_x[i]
+            previous_y = smooth_y[i]
 
         draw_line(canvas, previous_x, previous_y, canvas_info["cols"] *2 , canvas_info["center_y"])
         
@@ -390,7 +421,7 @@ try:
             fps_frames = 0
             fps_timer = now
 
-        sys.stdout.write(render_canvas(canvas))
+        sys.stdout.write("\033[H" + render_canvas(canvas) + "\033[J")
         sys.stdout.flush()
         canvas = create_canvas(canvas_info["cols"], canvas_info["rows"])
 
