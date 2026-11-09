@@ -264,7 +264,7 @@ fps_timer = time.perf_counter()
 
 band_edges = np.geomspace(40,16000, NUM_BANDS +1)
 
-#-----------FIND THE PART THAT EXACTLY TELLS THE HEIGHT OF THE BARS
+#-----------FIND THE PART THAT EXACTLY TELLS THE HEIGHT OF THE BARS-------------------------------
 # and then store them in an array, then use it for the coordinates
 # perhaps you can try by just drawing points first and then turn them into waves
 
@@ -359,7 +359,6 @@ try:
 
         pointxy = ([[0, canvas_info["center_y"]]])
 
-        #render_heights = np.convolve(smoothed, render_heights, mode = "same")
         for whole in render_heights:
             x_value = s_value * debug_value
             y_value = canvas_info["center_y"] - whole
@@ -381,7 +380,6 @@ try:
             
             #making curves smoother requires somepthing called curved interpolation
             pointxy.append([x_value,y_value])
-            #draw_line(canvas, previous_x, previous_y, x_value, y_value)
             debug_value += 1
             previous_x = x_value
             previous_y = y_value
@@ -393,11 +391,11 @@ try:
             theta = (x_value / (canvas_info["cols"]* 2)) * 2 * math.pi * 15
             y_value = canvas_info["center_y"] - whole * canvas_info["rows"] * np.sin(theta) * 0.04
             pointxy.append([x_value,y_value])
-            #draw_line(canvas, previous_x, previous_y, x_value , y_value)
             debug_value += 1
             previous_x = x_value
             previous_y = y_value
 
+        #here is the interpolation
         pointxy.append([canvas_info["cols"] * 2, canvas_info["center_y"]])
         xs,ys = zip(*pointxy)
         cs = CubicSpline(xs,ys)

@@ -1,4 +1,4 @@
-# This is an terminal audio visualizer inspired by CAVA
+# This is a terminal audio visualizer inspired by CAVA
 Searching for the best audio visualizer for my linux rice I stumbled upon CAVA used it for a long while and played with it configs a lot. If you want to check out CAVA here is the link for it: https://github.com/karlstav/cava. However in time it started feeling too simple and one-dimensional, so I wanted to bring some more movement to my favourite visualizer. It is still in development so if you want to try out always pick the latest blossomX.py version from the list. The reason I keep python files in seperate files is to remember progress without having to check past versions or changing the code itself. You can also try out cava8.py which my simple copy of cava itself, before I started coding blossom.
 # Required dependencies 
 Here is what you might need to install before running blossom in the terminal:
