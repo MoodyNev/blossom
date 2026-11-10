@@ -1,4 +1,3 @@
-#this is the one where we put everything really in motion nicely synced with the music
 import shutil 
 import time
 import math
@@ -10,11 +9,16 @@ import threading
 from scipy.interpolate import CubicSpline
 from scipy.interpolate import PchipInterpolator
 
-#this is mostly from the blossom stuff
-UI_ROWS = 0
-ASPECT_X = 1.25 #this because fonts work in a weird way
+#----------------------------------------USER SPECIFIC CONSTANTS----------------------------------------------
+#adjust this variable depending on your font, otherwise waves and the flower will appear a little ugly 
+#(best way to test is drawing a circle and change the values until you see a proper circle in the terminal)
+ASPECT_X = 1.25  
+#change your device name so the code can detect device output
+DEVICE = "bluez_output.88_8E_68_E1_9E_A8.1.monitor"
+#-------------------------------------------------------------------------------------------------------------
 
-#this is for the audio import stuff
+#MORE CONSTANTS
+UI_ROWS = 0
 TARGET_FPS = 60
 FFT_SIZE = 2048
 READ_SIZE = 960
@@ -23,11 +27,8 @@ REFERENCE_FPS = 60
 SAMPLE_RATE = 48000
 CHANNELS = 2
 BYTES_PER_SAMPLE= 2
-#-------------------------------------------constants-----------------------------------------------
 
-#audio processing 
-DEVICE = "bluez_output.88_8E_68_E1_9E_A8.1.monitor"
-
+#AUDIO PROCESSING
 audio_buffer = np.zeros(FFT_SIZE, dtype=np.float32)
 buffer_lock = threading.Lock() 
 
@@ -67,12 +68,12 @@ audio_thread = threading.Thread(target= capture_audio, daemon=True)
 audio_thread.start()
 window = np.hanning(FFT_SIZE)
 frequencies = np.fft.rfftfreq(FFT_SIZE, d=1/SAMPLE_RATE)
-#--------------------------------------audio import-------------------------------------------------------------
 
-BRAILLE_BASE = 0x2800 #this is the empty char unicodeeeee
+#BRAILLE SETUP
+BRAILLE_BASE = 0x2800 #this is the empty character unicode
 
 #we use a 8 bit system to represent this in programming
-#so here are the cursed bit values of 
+#so here are the cursed bit values of braille if you are curious
 DOT_BITS = {
     (0,0): 0x01, #dot 1 
     (0,1): 0x02, #dot 2
@@ -85,9 +86,7 @@ DOT_BITS = {
     (1,3): 0x80, #dot 8
 }
 
-#here comes more like the audio processing part
-#since this is cooked we gonna make array representing cells (since individuals pixel darstellung would be cooked)
-#this deals with the maths i dont want to calculate everytime
+#CREATE AND SETUP CANVAS
 def create_canvas(cols,rows):
     return[
         [0 for _ in range(cols)]
@@ -111,7 +110,6 @@ def set_pixel(canvas, x, y):
     #bit system, we can convert the orders by converting them
     canvas[cell_y][cell_x] |= DOT_BITS[(dot_x,dot_y)]
 
-#makes the output
 def render_canvas(canvas):
     lines = []
 
@@ -121,7 +119,6 @@ def render_canvas(canvas):
 
     return "\n".join(lines)
 
-#we will also make a 2d array representing terminal cells:
 def get_terminal_canvas():
     terminal = shutil.get_terminal_size()
 
@@ -144,8 +141,8 @@ def get_terminal_canvas():
         "center_y" : center_y, 
         "max_radius" : max_radius,
     }
-#---------------------------------------setting up braille and canvas--------------------------------------
 
+#DRAWING FUNCTIONS
 #draws a flower as the name suggests, it walks around a circle so to say and then changes the distance based on degree, which creates a flower like circle pattern
 def draw_flower(canvas, center_x, center_y, base_radius, petal_size, petals):
     #so we collect sth hereee
@@ -224,21 +221,13 @@ def draw_line(canvas, x1, y1, x2, y2):
         y = y1 + dy * t
 
         set_pixel(canvas, round(x), round(y))
-last_size = None
 
+#a little preperation before the loop
+last_size = None
 terminal = shutil.get_terminal_size()
 canvas = create_canvas(terminal.columns,terminal.lines)
 canvas_info = get_terminal_canvas()
-
-canvas = create_canvas(canvas_info["cols"], canvas_info["rows"])
-
-print(render_canvas(canvas))
-
-#HERE I WILL TRY TO PUT IN THE ACTUAL CODE IN A LOOP
-
-
 raw_data = stream.stdout.read(FFT_SIZE * CHANNELS * BYTES_PER_SAMPLE)
-
 samples = np.frombuffer(raw_data,dtype="<i2").reshape(-1,CHANNELS)
 analysis_buffer = np.mean(samples.astype(np.float32),axis=1) / 32768.0
 
@@ -267,6 +256,11 @@ band_edges = np.geomspace(40,16000, NUM_BANDS +1)
 #-----------FIND THE PART THAT EXACTLY TELLS THE HEIGHT OF THE BARS-------------------------------
 # and then store them in an array, then use it for the coordinates
 # perhaps you can try by just drawing points first and then turn them into waves
+
+#ACTUAL MAIN PART
+#TO-DO LIST:
+#terminal changes are not detected (checking them every frame is expensive though)
+#blossom is really cpu heavy atm, so we have to minimize and generalize the maths a little
 
 try:
     while True:
