@@ -22,7 +22,6 @@ UI_ROWS = 0
 TARGET_FPS = 60
 FFT_SIZE = 2048
 READ_SIZE = 960
-TARGET_FPS = 120
 REFERENCE_FPS = 60
 SAMPLE_RATE = 48000
 CHANNELS = 2
@@ -211,7 +210,7 @@ def draw_line(canvas, x1, y1, x2, y2):
     steps = math.ceil(max(abs(dx), abs(dy)))
 
     if steps == 0:
-        set_pixel(canvas, round(x1), round(x2))
+        set_pixel(canvas, round(x1), round(y1))
         return
 
     for i in range(steps + 1):
@@ -324,7 +323,8 @@ try:
 
         smoothed += coefficients * (normalized - smoothed)
 
-        bar_height = smoothed[i] * MAX_HEIGHT
+        for i in range(len(smoothed)):
+            bar_height = smoothed[i] * MAX_HEIGHT
 
         whole = int(bar_height)
         #float
