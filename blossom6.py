@@ -261,7 +261,7 @@ band_edges = np.geomspace(40,16000, NUM_BANDS +1)
 #terminal changes are not detected (checking them every frame is expensive though)
 #blossom is really cpu heavy atm, so we have to minimize and generalize the maths a little
 #we could pack all frequencies in an array and make the computer respond to them differently
-#because that was the initial plan i kinda forgot that along the way
+#because that was the initial plan i kinda forgot that along the wayy
 try:
     while True:
         with buffer_lock:
