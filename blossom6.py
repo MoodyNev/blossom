@@ -198,8 +198,9 @@ def draw_circle(canvas, center_x, center_y, radius):
         points.append((x,y))
 
     for i in range(len(points)):
-        x1, x2 = points[i]
-        y1, y2 = points[(i + 1) % len(points)]
+        x1, y1 = points[i]
+        #doing this calculation to not get an index error
+        x2, y2 = points[(i + 1) % len(points)]
 
         draw_line(canvas, x1,x2,y1,y2)
 
@@ -292,7 +293,7 @@ try:
         POWER = 0.5 #here is a variable you can play with but id rather not
         band_magnitudes = band_magnitudes ** POWER
 
-        #kind of looks similar to geompace, but instead of potentials we evenly divide the spaces between values
+        #kind of looks similar to geompace, but instead of potentials we evenly divide the spaces between valuess
         weights = np.linspace(0.5,2.0,NUM_BANDS)
 
         band_magnitudes *= weights
@@ -336,6 +337,8 @@ try:
             height = int(value *MAX_HEIGHT)
             height = max(0,min(MAX_HEIGHT,height))
             heights.append(height)
+
+        #delete everything until render heigts because it think this past is doing some useless maths
 
         render_heights = []
         for value in smoothed * MAX_HEIGHT:
