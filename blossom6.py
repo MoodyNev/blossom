@@ -181,7 +181,7 @@ def draw_waves(canvas, center_x, center_y, terminal_length, number_of_waves, hei
             points.append((x,y))
 
     #drawing
-    for i in range(len(points) -1):
+    for i in range(len(points) - 1):
         x1, y1 = points [i]
         x2, y2 = points[(i +1)]
         draw_line(canvas, x1,y1,x2,y2)
@@ -376,7 +376,7 @@ try:
                 if lol % 4 == 0:
                     lol = 1
             
-            #making curves smoother requires somepthing called curved interpolation
+            #making curves smoother requires somepthing called curved interpolationn
             pointxy.append([x_value,y_value])
             debug_value += 1
             previous_x = x_value
