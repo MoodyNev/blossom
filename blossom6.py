@@ -1,3 +1,5 @@
+#THIS IS THE VERSION I AM FULLY CONFIDENT GANG
+#GONNA PULL OUT THIS SHI WITH 0 AI
 import shutil 
 import time
 import math
@@ -263,8 +265,18 @@ band_edges = np.geomspace(40,16000, NUM_BANDS +1)
 #blossom is really cpu heavy atm, so we have to minimize and generalize the maths a little
 #we could pack all frequencies in an array and make the computer respond to them differently
 #because that was the initial plan i kinda forgot that along the wayy
+
+
+#BETTER TO DO LIST
+#scratch everything we are focusing on the optimization already because i am insane
+#why make everything in order when you can fuck up everything a bit better
+#so my initial plan wa to make the lines to respond to bass
+#since we are using all the frequencies i dont think the waves arent responsice enough yet.
+#this is why i wanted to play around the calculations a bit
+#so we can easily edit between which frequencies each component should respong
 try:
     while True:
+        #we got some buffer lock going on here 
         with buffer_lock:
             analysis_buffer = audio_buffer.copy()
 
@@ -339,11 +351,12 @@ try:
             heights.append(height)
 
         #delete everything until render heigts because it think this past is doing some useless maths
-
-        render_heights = []
-        for value in smoothed * MAX_HEIGHT:
-            whole = int(value)
-            render_heights.append(whole)
+        #OKAY I THINK THE UNECCESSARY PART WAS HERE 
+        #seems like it works without it
+        #render_heights = []
+        #for value in smoothed * MAX_HEIGHT:
+        #    whole = int(value)
+        #    render_heights.append(whole)
 
         #task: give a proper shape to waveforms
         #since we are not increasing the sample rate, we are gonna use sin to create more wavelike forms
@@ -353,17 +366,22 @@ try:
         previous_x = 0
         previous_y = canvas_info["center_y"]
         s_value = (int) (canvas_info["cols"] / NUM_BANDS)
+
+        #the amount of petals multiplied by this number
         lol = 1
+
+        #so it doesnt work when i for example say some_value= whole but it is fine when i write the whole straight
+        #I AM SO STUPID OMFG
 
         pointxy = ([[0, canvas_info["center_y"]]])
 
-        for whole in render_heights:
+        for i in heights:
             x_value = s_value * debug_value
-            y_value = canvas_info["center_y"] - whole
+            y_value = canvas_info["center_y"] - i
             theta = (x_value / (canvas_info["cols"] * 2)) * 2 * math.pi * 15
             # dont forget to make everything in a way that everything meets at a single point
             # so we gotta play with the max length in a way so that when the whole is 0 the terminal length is also 0
-            y_value = canvas_info["center_y"] - whole * canvas_info["rows"] * np.sin(theta) * 0.04
+            y_value = canvas_info["center_y"] - i * canvas_info["rows"] * np.sin(theta) * 0.04
 
             # kinda want the flower to rotate and i dont want it to be perfecty symmetrical
             # make the curves smoother
@@ -371,7 +389,7 @@ try:
             # also test adding a little rotation to the flower 
             # also the petal number shouldnt be based on the loop count but different frequencies
             if(debug_value % 4 == 0):
-                draw_flower(canvas, canvas_info["center_x"], canvas_info["center_y"], y_value / 4 * whole * 0.05, whole / lol , 4 * lol )
+                draw_flower(canvas, canvas_info["center_x"], canvas_info["center_y"], y_value / 4 * i * 0.05, i / lol , 4 * lol )
                 lol += 1
                 if lol % 4 == 0:
                     lol = 1
@@ -383,11 +401,11 @@ try:
             previous_y = y_value
 
         debug_value = 1
-        for whole in reversed(render_heights):
+        for i in reversed(heights):
             x_value = s_value * debug_value + canvas_info["center_x"]
-            y_value = canvas_info["center_y"] - whole *2
+            y_value = canvas_info["center_y"] - i *2
             theta = (x_value / (canvas_info["cols"]* 2)) * 2 * math.pi * 15
-            y_value = canvas_info["center_y"] - whole * canvas_info["rows"] * np.sin(theta) * 0.04
+            y_value = canvas_info["center_y"] - i * canvas_info["rows"] * np.sin(theta) * 0.04
             pointxy.append([x_value,y_value])
             debug_value += 1
             previous_x = x_value
@@ -417,7 +435,9 @@ try:
             fps_frames = 0
             fps_timer = now
 
-        sys.stdout.write("\033[H" + render_canvas(canvas) + "\033[J")
+        
+        print(len(spectrum))
+        #sys.stdout.write("\033[H" + render_canvas(canvas) + "\033[J")
         sys.stdout.flush()
         canvas = create_canvas(canvas_info["cols"], canvas_info["rows"])
 
