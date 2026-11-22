@@ -387,7 +387,7 @@ try:
             # make the curves smoother
             # the flower doent meet at the center atm
             # also test adding a little rotation to the flower 
-            # also the petal number shouldnt be based on the loop count but different frequencies
+            # also the petal number shouldnt be based on the loop count but different frequenciess
             if(debug_value % 4 == 0):
                 draw_flower(canvas, canvas_info["center_x"], canvas_info["center_y"], y_value / 4 * i * 0.05, i / lol , 4 * lol )
                 lol += 1
