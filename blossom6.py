@@ -436,8 +436,8 @@ try:
             fps_timer = now
 
         
-        print(len(spectrum))
-        #sys.stdout.write("\033[H" + render_canvas(canvas) + "\033[J")
+        #print(len(spectrum))
+        sys.stdout.write("\033[H" + render_canvas(canvas) + "\033[J")
         sys.stdout.flush()
         canvas = create_canvas(canvas_info["cols"], canvas_info["rows"])
 
