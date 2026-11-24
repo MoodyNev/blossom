@@ -204,7 +204,7 @@ def draw_circle(canvas, center_x, center_y, radius):
         #doing this calculation to not get an index error
         x2, y2 = points[(i + 1) % len(points)]
 
-        draw_line(canvas, x1,x2,y1,y2)
+        draw_line(canvas, x1,y1,x2,y2)
 
 def draw_line(canvas, x1, y1, x2, y2):
     dx = x2 - x1
@@ -229,9 +229,6 @@ last_size = None
 terminal = shutil.get_terminal_size()
 canvas = create_canvas(terminal.columns,terminal.lines)
 canvas_info = get_terminal_canvas()
-raw_data = stream.stdout.read(FFT_SIZE * CHANNELS * BYTES_PER_SAMPLE)
-samples = np.frombuffer(raw_data,dtype="<i2").reshape(-1,CHANNELS)
-analysis_buffer = np.mean(samples.astype(np.float32),axis=1) / 32768.0
 
 #lil debug
 
@@ -278,9 +275,11 @@ try:
     while True:
         #we got some buffer lock going on here 
         with buffer_lock:
+            #the capture cant write while read
             analysis_buffer = audio_buffer.copy()
 
         #fft
+        #collects the loudness of each frequency bin (about 23 hz apart)
         #i wanted to remove abs here to get negative values but apparently that isnt possible, we are using abs to convert some complex numbers
         spectrum = np.fft.rfft(analysis_buffer * window)
         magnitudes = (2* np.abs(spectrum)/np.sum(window))
@@ -288,7 +287,9 @@ try:
         #convert fft bins into 16 bands
         band_magnitudes = []
 
+        #here is the part that bins the frequencies into 20 bands 
         for i in range(NUM_BANDS):
+            
             low = band_edges[i]
             high = band_edges[i + 1]
 
@@ -336,13 +337,6 @@ try:
         coefficients = np.where(going_up, attack, release)
 
         smoothed += coefficients * (normalized - smoothed)
-
-        for i in range(len(smoothed)):
-            bar_height = smoothed[i] * MAX_HEIGHT
-
-        whole = int(bar_height)
-        #float
-        fraction = bar_height - whole
         
         heights = []
         for value in smoothed:
@@ -397,13 +391,10 @@ try:
             #making curves smoother requires somepthing called curved interpolationn
             pointxy.append([x_value,y_value])
             debug_value += 1
-            previous_x = x_value
-            previous_y = y_value
 
         debug_value = 1
         for i in reversed(heights):
             x_value = s_value * debug_value + canvas_info["center_x"]
-            y_value = canvas_info["center_y"] - i *2
             theta = (x_value / (canvas_info["cols"]* 2)) * 2 * math.pi * 15
             y_value = canvas_info["center_y"] - i * canvas_info["rows"] * np.sin(theta) * 0.04
             pointxy.append([x_value,y_value])
@@ -436,7 +427,9 @@ try:
             fps_timer = now
 
         
-        #print(len(spectrum))
+        #print(analysis_buffer)
+        #draw_circle(canvas, canvas_info["center_x"], canvas_info["center_y"], 40)
+        #print(band_edges)
         sys.stdout.write("\033[H" + render_canvas(canvas) + "\033[J")
         sys.stdout.flush()
         canvas = create_canvas(canvas_info["cols"], canvas_info["rows"])
