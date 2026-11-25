@@ -245,7 +245,7 @@ RELEASE = 0.15
 peak_level = 0.01
 PEAK_ATTACK = 1
 PEAK_RELEASE = 0.005
-MAX_HEIGHT = 50
+MAX_HEIGHT = 50 #canvas_info["rows"]
 fps = 0.0
 fps_frames = 0
 fps_timer = time.perf_counter()
@@ -344,18 +344,8 @@ try:
             height = max(0,min(MAX_HEIGHT,height))
             heights.append(height)
 
-        #delete everything until render heigts because it think this past is doing some useless maths
-        #OKAY I THINK THE UNECCESSARY PART WAS HERE 
-        #seems like it works without it
-        #render_heights = []
-        #for value in smoothed * MAX_HEIGHT:
-        #    whole = int(value)
-        #    render_heights.append(whole)
-
         #task: give a proper shape to waveforms
         #since we are not increasing the sample rate, we are gonna use sin to create more wavelike forms
-
-
         debug_value = 1
         previous_x = 0
         previous_y = canvas_info["center_y"]
@@ -364,43 +354,55 @@ try:
         #the amount of petals multiplied by this number
         lol = 1
 
-        #so it doesnt work when i for example say some_value= whole but it is fine when i write the whole straight
+        #so it doesnt work when i for example say some_value= whole but it is fine when i write the whole straightt
+    
         #I AM SO STUPID OMFG
 
         pointxy = ([[0, canvas_info["center_y"]]])
 
-        for i in heights:
+        #since i want the flower and the wave to respond to different things, i am going to make 3 different for loops
+        #one for the left and one for the right half of the terminal (i want em symmetrical)
+        #and there is going to be another loop for the flower
+        
+        for height in heights:
             x_value = s_value * debug_value
-            y_value = canvas_info["center_y"] - i
             theta = (x_value / (canvas_info["cols"] * 2)) * 2 * math.pi * 15
             # dont forget to make everything in a way that everything meets at a single point
             # so we gotta play with the max length in a way so that when the whole is 0 the terminal length is also 0
-            y_value = canvas_info["center_y"] - i * canvas_info["rows"] * np.sin(theta) * 0.04
+            y_value = canvas_info["center_y"] - height * canvas_info["rows"] * np.sin(theta) * 0.04
 
             # kinda want the flower to rotate and i dont want it to be perfecty symmetrical
             # make the curves smoother
             # the flower doent meet at the center atm
             # also test adding a little rotation to the flower 
             # also the petal number shouldnt be based on the loop count but different frequenciess
-            if(debug_value % 4 == 0):
-                draw_flower(canvas, canvas_info["center_x"], canvas_info["center_y"], y_value / 4 * i * 0.05, i / lol , 4 * lol )
-                lol += 1
-                if lol % 4 == 0:
-                    lol = 1
             
-            #making curves smoother requires somepthing called curved interpolationn
+            #making curves smoother requires somepthing called curved interpolation
             pointxy.append([x_value,y_value])
             debug_value += 1
+                        
 
         debug_value = 1
-        for i in reversed(heights):
+        for height in reversed(heights):
             x_value = s_value * debug_value + canvas_info["center_x"]
             theta = (x_value / (canvas_info["cols"]* 2)) * 2 * math.pi * 15
-            y_value = canvas_info["center_y"] - i * canvas_info["rows"] * np.sin(theta) * 0.04
+            y_value = canvas_info["center_y"] - height * canvas_info["rows"] * np.sin(theta) * 0.04
             pointxy.append([x_value,y_value])
             debug_value += 1
             previous_x = x_value
             previous_y = y_value
+
+        debug_value = 1
+        for height in heights:
+            x_value = s_value * debug_value
+            theta = (x_value / (canvas_info["cols"]* 2)) * 2 * math.pi * 15
+            y_value = canvas_info["center_y"] - height * canvas_info["rows"] * np.sin(theta) * 0.04
+            if(debug_value % 4 == 0):
+                draw_flower(canvas, canvas_info["center_x"], canvas_info["center_y"], y_value / 4 * height * 0.05, height / lol , 4 * lol )
+                lol += 1
+                if lol % 4 == 0:
+                    lol = 1
+            debug_value += 1
 
         #here is the interpolation
         pointxy.append([canvas_info["cols"] * 2, canvas_info["center_y"]])
